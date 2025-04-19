@@ -1,13 +1,15 @@
-# Material-UI Snackbar Provider
+# Material-UI Snackbar Provider (React 18/19 and MUI v6/v7)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 [![Build Status](https://travis-ci.org/TeamWertarbyte/material-ui-snackbar-provider.svg)](https://travis-ci.org/TeamWertarbyte/material-ui-snackbar-provider)
 [![Coverage Status](https://coveralls.io/repos/github/TeamWertarbyte/material-ui-snackbar-provider/badge.svg?branch=master)](https://coveralls.io/github/TeamWertarbyte/material-ui-snackbar-provider?branch=master)
 
-A convenient way to use [material-ui][]'s snackbars.
+A convenient way to use [@material/ui][]'s snackbars.
+
+## This package is an update to work with React 18/19 and Material UI v6/v7
 
 ## Installation
 ```shell
-npm i --save material-ui-snackbar-provider
+npm i --save @andychukse/material-ui-snackbar-provider
 ```
 
 ## Usage

@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Snackbar, Button } from '@material-ui/core'
-import { Alert } from '@material-ui/lab'
+import { Alert, Snackbar, Button } from '@mui/material'
+// import { Alert } from '@mui/lab'
 
 export default function CustomSnackbar ({
   message,

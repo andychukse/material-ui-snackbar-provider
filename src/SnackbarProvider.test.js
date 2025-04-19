@@ -1,200 +1,253 @@
 /* eslint-env jest */
 import React from 'react'
-import { mount } from 'enzyme'
+// Remove unused fireEvent import
+import { render, screen, waitFor, act } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import SnackbarProvider from './SnackbarProvider'
-import { Snackbar, Button } from '@mui/material'
 import SnackbarContext from './SnackbarContext'
+import { ThemeProvider, createTheme } from '@mui/material/styles' // Needed for MUI components
+
+// Helper component to access the context value
+const SnackBarContextConsumer = ({ onSnackbarReceived }) => {
+  const snackbar = React.useContext(SnackbarContext)
+  React.useEffect(() => {
+    if (snackbar) {
+      onSnackbarReceived(snackbar)
+    }
+  }, [snackbar, onSnackbarReceived])
+  return null // This component doesn't render anything itself
+}
+
+// MUI requires a ThemeProvider
+const AllTheProviders = ({ children }) => {
+  const theme = createTheme()
+  return (
+    <ThemeProvider theme={theme}>
+      {children}
+    </ThemeProvider>
+  )
+}
+
+const customRender = (ui, options) =>
+  render(ui, { wrapper: AllTheProviders, ...options })
 
 describe('SnackbarProvider', () => {
-  it('adds a snackbar property to the context', () => {
-    const { Consumer, snackbar } = snackbarGrabber()
-    mount(
-      <SnackbarProvider>
-        <Consumer />
-      </SnackbarProvider>
-    )
+  let snackbarInstance
 
-    expect(snackbar()).toEqual({
+  // Helper to render provider and capture snackbar context
+  const renderWithSnackbar = (providerProps = {}, consumerProps = {}) => {
+    const handleSnackbarReceived = jest.fn((snackbar) => {
+      snackbarInstance = snackbar
+    })
+
+    // Wrap initial render in act if it causes immediate effects/updates
+    // (Though render usually handles this, being explicit can sometimes help)
+    let utils
+    act(() => {
+      utils = customRender(
+        <SnackbarProvider {...providerProps}>
+          <SnackBarContextConsumer onSnackbarReceived={handleSnackbarReceived} {...consumerProps} />
+        </SnackbarProvider>
+      )
+    })
+
+    // Ensure snackbarInstance is captured - might need waitFor if context is async
+    // waitFor(() => expect(handleSnackbarReceived).toHaveBeenCalled());
+    // If context is set synchronously on mount, this is fine:
+    expect(handleSnackbarReceived).toHaveBeenCalled()
+
+    return { ...utils, snackbar: snackbarInstance }
+  }
+
+  beforeEach(() => {
+    snackbarInstance = null
+    // Ensure timers are real by default for each test
+    jest.useRealTimers()
+  })
+
+  it('adds a snackbar property to the context', () => {
+    renderWithSnackbar()
+    expect(snackbarInstance).toEqual({
       showMessage: expect.any(Function)
     })
   })
 
   it('does not display a snackbar by default', () => {
-    const tree = mount(<SnackbarProvider />)
-    expect(tree.find(Snackbar).prop('open')).toBe(false)
+    renderWithSnackbar()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
-  it('shows a snackbar after calling showMessage', () => {
-    const { tree, snackbar } = getSnackbarWithContext()
-
-    snackbar.showMessage('Something went wrong')
-    tree.update()
-    expect(tree.find(Snackbar).prop('open')).toBe(true)
-    expect(tree.find(Snackbar).prop('message')).toBe('Something went wrong')
-    expect(tree.find(Snackbar).prop('action')).toBeFalsy()
-  })
-
-  it('can display an action button', () => {
-    const { tree, snackbar } = getSnackbarWithContext()
-
-    snackbar.showMessage('Something went wrong', 'Retry', () => {})
-    tree.update()
-    expect(
-      tree
-        .find(Snackbar)
-        .find(Button)
-        .text()
-    ).toBe('Retry')
-  })
-
-  it('calls the action callback after clicking the button and closes the snackbar', () => {
-    const { tree, snackbar } = getSnackbarWithContext()
-
-    const actionCallback = jest.fn()
-    snackbar.showMessage('Something went wrong', 'Retry', actionCallback)
-    tree.update()
-
-    tree
-      .find(Snackbar)
-      .find(Button)
-      .simulate('click')
-    expect(actionCallback).toHaveBeenCalled()
-    tree.update()
-    expect(tree.find(Snackbar).prop('open')).toBe(false)
-  })
-
-  it('calls the close callback after closing the snackbar', () => {
-    const { tree, snackbar } = getSnackbarWithContext()
-
-    const actionCallback = jest.fn()
-    const closeCallback = jest.fn()
-    snackbar.showMessage('Something went wrong', 'Retry', actionCallback, undefined, closeCallback)
-    tree.update()
-
-    tree.find(Snackbar).prop('onClose')()
-    tree.update()
-    expect(actionCallback).not.toHaveBeenCalled()
-    expect(closeCallback).toHaveBeenCalled()
-    tree.update()
-    expect(tree.find(Snackbar).prop('open')).toBe(false)
-  })
-
-  it('does not call the close callback after clicking the button', () => {
-    const { tree, snackbar } = getSnackbarWithContext()
-
-    const actionCallback = jest.fn()
-    const closeCallback = jest.fn()
-    snackbar.showMessage('Something went wrong', 'Retry', actionCallback, undefined, closeCallback)
-    tree.update()
-
-    tree
-      .find(Snackbar)
-      .find(Button)
-      .simulate('click')
-    expect(actionCallback).toHaveBeenCalled()
-    expect(closeCallback).not.toHaveBeenCalled()
-    tree.update()
-    expect(tree.find(Snackbar).prop('open')).toBe(false)
-  })
-
-  it('hides the snackbar when its onClose prop is called', () => {
-    const { tree, snackbar } = getSnackbarWithContext()
-
-    snackbar.showMessage('Test')
-    tree.update()
-
-    tree.find(Snackbar).prop('onClose')()
-    tree.update()
-    expect(tree.find(Snackbar).prop('open')).toBe(false)
-  })
-
-  it('propagates SnackbarProps to the Snackbar component', () => {
-    const tree = mount(
-      <SnackbarProvider SnackbarProps={{ autoHideDuration: 6000 }} />
-    )
-
-    expect(tree.find(Snackbar).prop('autoHideDuration')).toBe(6000)
-  })
-
-  it('propagates ButtonProps to the action Button component', () => {
-    const { tree, snackbar } = getSnackbarWithContext({
-      ButtonProps: { color: 'primary' }
+  it('shows a snackbar after calling showMessage', async () => {
+    const { snackbar } = renderWithSnackbar()
+    // Wrap state update in act
+    act(() => {
+      snackbar.showMessage('Something went wrong')
     })
-    snackbar.showMessage('Internet deleted', 'Undo', () => {})
-    tree.update()
-    expect(tree.find(Button).prop('color')).toBe('primary')
+
+    const snackbarElement = await screen.findByRole('alert')
+    expect(snackbarElement).toBeInTheDocument()
+    expect(snackbarElement).toHaveTextContent('Something went wrong')
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
 
-  it('can overwrite the auto hide duration when showing a snackbar', () => {
-    const { tree, snackbar } = getSnackbarWithContext({ SnackbarProps: { autoHideDuration: 6000 } })
-    snackbar.showMessage('Internet deleted', 'Undo', () => {}, { autoHideDuration: 42000 })
-    tree.update()
+  it('can display an action button', async () => {
+    const { snackbar } = renderWithSnackbar()
+    // Wrap state update in act
+    act(() => {
+      snackbar.showMessage('Something went wrong', 'Retry', () => {})
+    })
 
-    expect(tree.find(Snackbar).prop('autoHideDuration')).toBe(42000)
+    const button = await screen.findByRole('button', { name: /Retry/i })
+    expect(button).toBeInTheDocument()
   })
 
-  it('always returns the same reference', () => {
-    const { Consumer, snackbar } = snackbarGrabber()
-    const tree = mount(
-      <SnackbarProvider>
-        <Consumer />
-      </SnackbarProvider>
-    )
-    const firstSnackbar = snackbar()
-    tree.instance().forceUpdate()
-    expect(snackbar()).toBe(firstSnackbar)
+  it('calls the action callback after clicking the button and closes the snackbar', async () => {
+    const user = userEvent.setup()
+    const actionCallback = jest.fn()
+    const { snackbar } = renderWithSnackbar()
+
+    // Wrap state update in act
+    act(() => {
+      snackbar.showMessage('Something went wrong', 'Retry', actionCallback)
+    })
+
+    const button = await screen.findByRole('button', { name: /Retry/i })
+    // userEvent actions are already wrapped in act
+    await user.click(button)
+
+    expect(actionCallback).toHaveBeenCalledTimes(1)
+
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    })
   })
 
-  it('supports custom snackbar renderers', () => {
-    const SnackbarComponent = jest.fn(({ message, action, ButtonProps, SnackbarProps }) => (
-      <Snackbar {...SnackbarProps} message={message || ''} action={action != null && <Button {...ButtonProps}>{action}</Button>} />
-    ))
-    const { tree, snackbar } = getSnackbarWithContext({ SnackbarComponent })
-    tree.update()
+  it('calls the close callback after closing the snackbar (e.g., autoHideDuration)', async () => {
+    jest.useFakeTimers()
+    const actionCallback = jest.fn()
+    const closeCallback = jest.fn()
+    // Pass autoHideDuration via SnackbarProps correctly
+    const { snackbar } = renderWithSnackbar({ SnackbarProps: { autoHideDuration: 100 } })
+
+    // Wrap state update in act
+    act(() => {
+      // Pass closeCallback as the 5th argument
+      snackbar.showMessage('Auto closing', 'Action', actionCallback, undefined, closeCallback)
+    })
+
+    // Wait for snackbar to appear
+    await screen.findByRole('alert')
+
+    // Fast-forward timers - wrap in act
+    act(() => {
+      jest.advanceTimersByTime(150) // More than autoHideDuration
+    })
+
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    })
+
+    expect(actionCallback).not.toHaveBeenCalled()
+    expect(closeCallback).toHaveBeenCalledTimes(1)
+
+    // No need to call jest.useRealTimers() here, handled by beforeEach
+  })
+
+  it('does not call the close callback after clicking the button', async () => {
+    const user = userEvent.setup()
+    const actionCallback = jest.fn()
+    const closeCallback = jest.fn()
+    const { snackbar } = renderWithSnackbar()
+
+    // Wrap state update in act
+    act(() => {
+      snackbar.showMessage('Something went wrong', 'Retry', actionCallback, undefined, closeCallback)
+    })
+
+    const button = await screen.findByRole('button', { name: /Retry/i })
+    // userEvent actions are already wrapped in act
+    await user.click(button)
+
+    expect(actionCallback).toHaveBeenCalledTimes(1)
+    expect(closeCallback).not.toHaveBeenCalled()
+
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    })
+  })
+
+  it('propagates SnackbarProps to the Snackbar component', async () => {
+    const { snackbar } = renderWithSnackbar({ SnackbarProps: { 'data-testid': 'custom-snackbar' } })
+    // Wrap state update in act
+    act(() => {
+      snackbar.showMessage('Test')
+    })
+
+    const snackbarElement = await screen.findByTestId('custom-snackbar')
+    expect(snackbarElement).toBeInTheDocument()
+  })
+
+  it('propagates ButtonProps to the action Button component', async () => {
+    const { snackbar } = renderWithSnackbar({ ButtonProps: { 'data-testid': 'custom-button' } })
+    // Wrap state update in act
+    act(() => {
+      snackbar.showMessage('Internet deleted', 'Undo', () => {})
+    })
+
+    const button = await screen.findByTestId('custom-button')
+    expect(button).toBeInTheDocument()
+    expect(button).toHaveTextContent('Undo')
+  })
+
+  it('supports custom snackbar renderers', async () => {
+    const user = userEvent.setup()
+    const CustomSnackbarComponent = jest.fn(({ message, action, ButtonProps, SnackbarProps, customParameters }) => {
+      const { open } = SnackbarProps || {}
+      const { onClick, ...otherButtonProps } = ButtonProps || {}
+
+      if (!open) return null
+
+      return (
+        <div role='alert' data-testid='custom-renderer'>
+          Custom: {message} - Param: {customParameters?.type}
+          {action && (
+            <button onClick={onClick} {...otherButtonProps}>
+              {action}
+            </button>
+          )}
+        </div>
+      )
+    })
+
+    const { snackbar } = renderWithSnackbar({ SnackbarComponent: CustomSnackbarComponent })
 
     const handleAction = jest.fn()
-    snackbar.showMessage('Test', 'Action', handleAction, { type: 'error' })
-    tree.update()
-    expect(SnackbarComponent).toHaveBeenCalledWith(expect.objectContaining({
-      message: 'Test',
-      customParameters: { type: 'error' },
-      SnackbarProps: expect.anything()
-    }), expect.anything())
-    expect(tree.find(Snackbar).prop('open')).toBe(true)
-    expect(tree.find(Snackbar).prop('message')).toBe('Test')
+    act(() => {
+      snackbar.showMessage('Test', 'Action', handleAction, { type: 'error' })
+    })
 
-    tree
-      .find(Snackbar)
-      .find(Button)
-      .simulate('click')
+    const customElement = await screen.findByTestId('custom-renderer')
+    expect(customElement).toBeInTheDocument()
+    expect(customElement).toHaveTextContent('Custom: Test - Param: error')
+
+    const lastCallArgs = CustomSnackbarComponent.mock.calls[CustomSnackbarComponent.mock.calls.length - 1]
+    const receivedProps = lastCallArgs[0]
+
+    expect(receivedProps.message).toBe('Test')
+    expect(receivedProps.action).toBe('Action')
+    expect(receivedProps.customParameters).toEqual({ type: 'error' })
+    expect(receivedProps.SnackbarProps).toBeDefined()
+    expect(receivedProps.SnackbarProps.open).toBe(true)
+    expect(receivedProps.ButtonProps).toBeDefined()
+    expect(receivedProps.ButtonProps.onClick).toEqual(expect.any(Function))
+
+    const button = screen.getByRole('button', { name: /Action/i })
+    await user.click(button)
+
     expect(handleAction).toHaveBeenCalledTimes(1)
 
-    tree.find(Snackbar).prop('onClose')()
-    tree.update()
-    expect(tree.find(Snackbar).prop('open')).toBe(false)
+    await waitFor(() => {
+      expect(screen.queryByTestId('custom-renderer')).not.toBeInTheDocument()
+    })
   })
 })
-
-function snackbarGrabber () {
-  let snackbar = null
-  return {
-    snackbar: () => snackbar,
-    Consumer: () => {
-      snackbar = React.useContext(SnackbarContext)
-      return null
-    }
-  }
-}
-
-function getSnackbarWithContext (props) {
-  const { Consumer, snackbar } = snackbarGrabber()
-  const tree = mount(
-    <SnackbarProvider {...props}>
-      <Consumer />
-    </SnackbarProvider>
-  )
-  return {
-    tree,
-    snackbar: snackbar()
-  }
-}

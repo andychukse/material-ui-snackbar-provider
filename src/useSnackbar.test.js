@@ -1,35 +1,31 @@
 /* eslint-env jest */
 import React from 'react'
-import { mount } from 'enzyme'
+import { render } from '@testing-library/react' // Import render from RTL
 import SnackbarContext from './SnackbarContext'
 import useSnackbar from './useSnackbar'
 
 describe('useSnackbar', () => {
-  it('injects the snackbar object', () => {
+  it('injects the snackbar object from context', () => {
+    // Define a mock context value
     const dummySnackbarContext = {
-      showMessage: () => {}
+      showMessage: jest.fn() // Use jest.fn() for mock function
     }
 
-    function DummySnackbarProvider ({ children }) {
-      return (
-        <SnackbarContext.Provider value={dummySnackbarContext}>
-          {children}
-        </SnackbarContext.Provider>
-      )
+    // Create a simple component that uses the hook
+    let capturedSnackbar
+    const TestComponent = () => {
+      capturedSnackbar = useSnackbar() // Call the hook
+      return null // Component doesn't need to render anything for this test
     }
 
-    let snackbar
-    const Component = function () {
-      snackbar = useSnackbar()
-      return null
-    }
+    // Render the component within the context provider
+    render(
+      <SnackbarContext.Provider value={dummySnackbarContext}>
+        <TestComponent />
+      </SnackbarContext.Provider>
+    )
 
-    mount(
-      <DummySnackbarProvider>
-        <Component />
-      </DummySnackbarProvider>
-    ).find(Component)
-
-    expect(snackbar).toBe(dummySnackbarContext)
+    // Assert that the hook returned the context value
+    expect(capturedSnackbar).toBe(dummySnackbarContext)
   })
 })

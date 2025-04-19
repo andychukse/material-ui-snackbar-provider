@@ -1,6 +1,6 @@
 import React from 'react'
 import { SnackbarProvider, useSnackbar } from '../src'
-import { Button } from '@material-ui/core'
+import { Button } from '@mui/material'
 
 export default {
   title: 'SnackbarProvider'

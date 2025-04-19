@@ -1,7 +1,7 @@
 import React from 'react'
 import { SnackbarProvider, useSnackbar } from '../src'
-import { Button, Snackbar, IconButton } from '@material-ui/core'
-import CloseIcon from '@material-ui/icons/Close'
+import { Button, Snackbar, IconButton } from '@mui/material'
+import CloseIcon from '@mui/icons-material/Close'
 import useCustomSnackbar from './CustomSnackbar/useCustomSnackbar'
 import CustomSnackbar from './CustomSnackbar/CustomSnackbar'
 
