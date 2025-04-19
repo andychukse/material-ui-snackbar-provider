@@ -1,5 +1,5 @@
 {
-  "name": "@stordata/material-ui-snackbar-provider",
+  "name": "@anychukse/material-ui-snackbar-provider",
   "version": "3.0.2",
   "description": "A convenient way to use material-ui's snackbars.",
   "main": "lib/index.js",
