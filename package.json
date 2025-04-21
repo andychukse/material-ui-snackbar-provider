@@ -1,5 +1,5 @@
 {
-  "name": "@anychukse/material-ui-snackbar-provider",
+  "name": "@andychukse/material-ui-snackbar-provider",
   "version": "3.0.2",
   "description": "A convenient way to use material-ui's snackbars.",
   "main": "lib/index.js",
@@ -117,5 +117,10 @@
     "README.md",
     "lib/**/*.js",
     "lib/**/*.d.ts"
-  ]
+  ],
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "types": "./lib/index.d.ts"
 }

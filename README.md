@@ -17,7 +17,7 @@ Simply wrap all components that should display snackbars with the `SnackbarProvi
 e.g. by wrapping your router with it.
 
 ```js
-import { SnackbarProvider } from 'material-ui-snackbar-provider'
+import { SnackbarProvider } from '@andychukse/material-ui-snackbar-provider'
 
 // somewhere at the root of your app
 <SnackbarProvider SnackbarProps={{ autoHideDuration: 4000 }}>
@@ -28,7 +28,7 @@ import { SnackbarProvider } from 'material-ui-snackbar-provider'
 You can then display messages with the `useSnackbar` hook. More examples [can be found here](https://github.com/TeamWertarbyte/material-ui-snackbar-provider/tree/master/stories).
 
 ```js
-import { useSnackbar } from 'material-ui-snackbar-provider'
+import { useSnackbar } from '@andychukse/material-ui-snackbar-provider'
 
 export default function MyComponent (props) {
   const snackbar = useSnackbar()
@@ -53,7 +53,7 @@ export default function MyComponent (props) {
 If you're not using React ^16.8.0 and our you can't use hooks (e.g. in a class component), you can use the `withSnackbar` HOC and the injected `snackbar` prop instead.
 
 ```js
-import { withSnackbar } from 'material-ui-snackbar-provider'
+import { withSnackbar } from '@andychukse/material-ui-snackbar-provider'
 
 class MyComponent {
   // *snip*
