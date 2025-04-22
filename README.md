@@ -1,6 +1,6 @@
 # Material-UI Snackbar Provider (React 18/19 and MUI v6/v7)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
-[![Build Status](https://travis-ci.org/TeamWertarbyte/material-ui-snackbar-provider.svg)](https://travis-ci.org/TeamWertarbyte/material-ui-snackbar-provider)
+[![Build Status](https://travis-ci.org/andychukse/material-ui-snackbar-provider.svg)](https://travis-ci.org/TeamWertarbyte/material-ui-snackbar-provider)
 [![Coverage Status](https://coveralls.io/repos/github/TeamWertarbyte/material-ui-snackbar-provider/badge.svg?branch=master)](https://coveralls.io/github/TeamWertarbyte/material-ui-snackbar-provider?branch=master)
 
 A convenient way to use [@material/ui][]'s snackbars.
@@ -25,7 +25,7 @@ import { SnackbarProvider } from '@andychukse/material-ui-snackbar-provider'
 </SnackbarProvider>
 ```
 
-You can then display messages with the `useSnackbar` hook. More examples [can be found here](https://github.com/TeamWertarbyte/material-ui-snackbar-provider/tree/master/stories).
+You can then display messages with the `useSnackbar` hook. More examples [can be found here](https://github.com/andychukse/material-ui-snackbar-provider/tree/master/stories).
 
 ```js
 import { useSnackbar } from '@andychukse/material-ui-snackbar-provider'
@@ -73,7 +73,7 @@ export default withSnackbar()(MyComponent) // export the wrapped component
 ```
 
 ### Snackbar variants
-Snackbar variants (i.e. diffent styles for different types of messages) can be implemented using the `Alert` component from `@material-ui/lab`. An example that also adds a custom hook to display snackbars with different severities is available [here](https://github.com/TeamWertarbyte/material-ui-snackbar-provider/tree/master/stories/1-custom.stories.js).
+Snackbar variants (i.e. diffent styles for different types of messages) can be implemented using the `Alert` component from `@material-ui/lab`. An example that also adds a custom hook to display snackbars with different severities is available [here](https://github.com/andychukse/material-ui-snackbar-provider/tree/master/stories/1-custom.stories.js).
 
 ### SnackbarProvider Props
 |Name            |Type        |Default     |Description
